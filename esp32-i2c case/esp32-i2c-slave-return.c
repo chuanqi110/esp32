@@ -72,7 +72,6 @@
 #define ACK_VAL    0x0         /*!< I2C ack value */
 #define NACK_VAL   0x1         /*!< I2C nack value */
 
-xSemaphoreHandle print_mux;
 SemaphoreHandle_t read_binary = NULL;
 /**
  * @brief test code to read esp-i2c-slave
@@ -183,15 +182,15 @@ static void i2c_test_task_master(void* arg)
     int i = 0;
     int size;
     int ret;
-    uint32_t task_idx = (uint32_t) arg;
-    uint8_t* data = (uint8_t*) malloc(DATA_LENGTH);
+
     uint8_t* data_wr = (uint8_t*) malloc(DATA_LENGTH);
     memset(data_wr,0,20);
     uint8_t* data_rd = (uint8_t*) malloc(DATA_LENGTH);
+    memset(data_rd,0,20);
 
     while (1) {
         //master write
-        int size;
+
         for (i = 0; i < DATA_LENGTH; i++) {
             data_wr[i] = i + 10;
         }
@@ -210,14 +209,10 @@ static void i2c_test_task_master(void* arg)
 
 static void i2c_test_task_slave(void* arg)
 {
-    int i = 0;
+
     int size;
-    int ret;
-    uint32_t task_idx = (uint32_t) arg;
     uint8_t* data = (uint8_t*) malloc(DATA_LENGTH);
     memset(data,0,20);
-    uint8_t* data_wr = (uint8_t*) malloc(DATA_LENGTH);
-    uint8_t* data_rd = (uint8_t*) malloc(DATA_LENGTH);
 
     while (1) {
 
@@ -233,13 +228,13 @@ static void i2c_test_task_slave(void* arg)
 }
 void app_main()
 {
-    print_mux = xSemaphoreCreateMutex();
+
     read_binary = xSemaphoreCreateBinary();
-    xSemaphoreGive( read_binary );
 
     i2c_example_slave_init();
     i2c_example_master_init();
 
-    xTaskCreate(i2c_test_task_master, "i2c_test_task_0", 1024 * 2, (void* ) 0, 10, NULL);
-    xTaskCreate(i2c_test_task_slave, "i2c_test_task_1", 1024 * 2, (void* ) 1, 10, NULL);
+    xTaskCreate(i2c_test_task_master, "i2c_test_task_master", 1024 * 2, (void* ) 0, 10, NULL);
+    xTaskCreate(i2c_test_task_slave, "i2c_test_task_slave", 1024 * 2, (void* ) 1, 10, NULL);
 }
+
